@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}حجز {{ space.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h3 class="fw-bold mb-1"><i class="fas fa-calendar-plus me-2 text-warning"></i>حجز مساحة</h3>
+            <p class="text-muted mb-4">{{ space.title }} — {{ space.get_city_display }}</p>
+
+            <div class="alert alert-info d-flex align-items-center gap-2 mb-4">
+                <i class="fas fa-info-circle"></i>
+                <span>السعر: <strong>{{ space.price_per_day }} ريال / يوم</strong></span>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger small mt-1">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-warning fw-bold px-4">إرسال طلب الحجز</button>
+                    <a href="{% url 'spaces:detail' space.pk %}" class="btn btn-outline-secondary px-4">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('input[type=date], textarea').forEach(el => el.classList.add('form-control'));
+</script>
+{% endblock %}

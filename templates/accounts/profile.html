@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}الملف الشخصي{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    {% if profile.profile_pic %}
+                        <img src="{{ profile.profile_pic.url }}" class="rounded-circle mb-3"
+                             style="width:100px;height:100px;object-fit:cover;" alt="الصورة الشخصية">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width:100px;height:100px;">
+                            <i class="fas fa-user fa-3x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h4 class="fw-bold">{{ user.get_full_name|default:user.username }}</h4>
+                    <span class="badge bg-{% if profile.is_owner %}warning text-dark{% else %}info{% endif %}">
+                        {{ profile.get_role_display }}
+                    </span>
+                </div>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-dark w-100 py-2">حفظ التغييرات</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('input[type=text], input[type=tel], textarea').forEach(el => {
+    el.classList.add('form-control');
+});
+document.querySelectorAll('input[type=file]').forEach(el => {
+    el.classList.add('form-control');
+});
+</script>
+{% endblock %}

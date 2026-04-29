@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-tachometer-alt me-2"></i>لوحة التحكم</h2>
+
+{% if profile.is_owner %}
+    <!-- Owner Dashboard -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <h1 class="display-5 fw-bold text-warning">{{ my_spaces.count }}</h1>
+                <p class="mb-0 text-muted">مساحاتي</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <h1 class="display-5 fw-bold text-danger">{{ pending_bookings.count }}</h1>
+                <p class="mb-0 text-muted">طلبات معلقة</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <a href="{% url 'spaces:add' %}" class="btn btn-warning btn-lg w-100 fw-bold">
+                    <i class="fas fa-plus me-1"></i> أضف مساحة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="fw-bold mb-3">مساحاتي</h4>
+    {% if my_spaces %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>الاسم</th><th>النوع</th><th>المدينة</th><th>الحالة</th><th>السعر</th><th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for space in my_spaces %}
+                    <tr>
+                        <td>{{ space.title }}</td>
+                        <td>{{ space.get_space_type_display }}</td>
+                        <td>{{ space.get_city_display }}</td>
+                        <td>
+                            <span class="badge bg-{% if space.status == 'available' %}success{% else %}secondary{% endif %}">
+                                {{ space.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ space.price_per_day }} ريال</td>
+                        <td>
+                            <a href="{% url 'spaces:edit' space.pk %}" class="btn btn-sm btn-outline-primary">تعديل</a>
+                            <a href="{% url 'spaces:delete' space.pk %}" class="btn btn-sm btn-outline-danger">حذف</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">لم تضف أي مساحة بعد. <a href="{% url 'spaces:add' %}">أضف الآن</a></div>
+    {% endif %}
+
+    {% if pending_bookings %}
+        <h4 class="fw-bold mt-5 mb-3">طلبات الحجز المعلقة</h4>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-warning">
+                    <tr><th>المساحة</th><th>المستأجر</th><th>من</th><th>إلى</th><th>الإجمالي</th><th>إجراءات</th></tr>
+                </thead>
+                <tbody>
+                    {% for booking in pending_bookings %}
+                    <tr>
+                        <td>{{ booking.space.title }}</td>
+                        <td>{{ booking.tenant.username }}</td>
+                        <td>{{ booking.date_from }}</td>
+                        <td>{{ booking.date_to }}</td>
+                        <td>{{ booking.total_price }} ريال</td>
+                        <td>
+                            <a href="{% url 'bookings:confirm' booking.pk %}" class="btn btn-sm btn-success">قبول</a>
+                            <a href="{% url 'bookings:cancel' booking.pk %}" class="btn btn-sm btn-danger">رفض</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+{% else %}
+    <!-- Tenant Dashboard -->
+    <h4 class="fw-bold mb-3">حجوزاتي</h4>
+    {% if my_bookings %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr><th>المساحة</th><th>من</th><th>إلى</th><th>الإجمالي</th><th>الحالة</th><th>إجراءات</th></tr>
+                </thead>
+                <tbody>
+                    {% for booking in my_bookings %}
+                    <tr>
+                        <td><a href="{% url 'spaces:detail' booking.space.pk %}">{{ booking.space.title }}</a></td>
+                        <td>{{ booking.date_from }}</td>
+                        <td>{{ booking.date_to }}</td>
+                        <td>{{ booking.total_price }} ريال</td>
+                        <td>
+                            <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning text-dark{% elif booking.status == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if booking.status == 'pending' or booking.status == 'confirmed' %}
+                                <a href="{% url 'bookings:cancel' booking.pk %}" class="btn btn-sm btn-outline-danger">إلغاء</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">لا توجد حجوزات. <a href="{% url 'spaces:list' %}">ابحث عن مساحة</a></div>
+    {% endif %}
+{% endif %}
+{% endblock %}

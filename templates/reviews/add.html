@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}تقييم {{ space.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h4 class="fw-bold mb-1"><i class="fas fa-star me-2 text-warning"></i>تقييم المساحة</h4>
+            <p class="text-muted mb-4">{{ space.title }}</p>
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger small mt-1">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning fw-bold px-4">إرسال التقييم</button>
+                    <a href="{% url 'spaces:detail' space.pk %}" class="btn btn-outline-secondary px-4">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('input[type=number], textarea').forEach(el => el.classList.add('form-control'));
+</script>
+{% endblock %}

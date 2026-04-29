@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}حجوزاتي{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-list-alt me-2"></i>حجوزاتي</h2>
+
+{% if bookings %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>المساحة</th>
+                    <th>المدينة</th>
+                    <th>من</th>
+                    <th>إلى</th>
+                    <th>الأيام</th>
+                    <th>الإجمالي</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>
+                        <a href="{% url 'spaces:detail' booking.space.pk %}" class="fw-bold text-decoration-none">
+                            {{ booking.space.title }}
+                        </a>
+                    </td>
+                    <td>{{ booking.space.get_city_display }}</td>
+                    <td>{{ booking.date_from }}</td>
+                    <td>{{ booking.date_to }}</td>
+                    <td>{{ booking.duration_days }} يوم</td>
+                    <td class="fw-bold text-success">{{ booking.total_price }} ريال</td>
+                    <td>
+                        <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning text-dark{% elif booking.status == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                            {{ booking.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if booking.status == 'pending' or booking.status == 'confirmed' %}
+                            <a href="{% url 'bookings:cancel' booking.pk %}" class="btn btn-sm btn-outline-danger">إلغاء</a>
+                        {% else %}
+                            <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">لا توجد حجوزات بعد</h4>
+        <a href="{% url 'spaces:list' %}" class="btn btn-warning fw-bold mt-2">ابحث عن مساحة</a>
+    </div>
+{% endif %}
+{% endblock %}

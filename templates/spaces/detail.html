@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ space.title }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Images -->
+    <div class="col-lg-7">
+        {% with images=space.images.all %}
+            {% if images %}
+                <div id="spaceCarousel" class="carousel slide rounded-4 overflow-hidden shadow" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for img in images %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{{ img.image.url }}" class="d-block w-100" style="height:380px;object-fit:cover;" alt="صورة">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if images|length > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#spaceCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#spaceCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                    {% endif %}
+                </div>
+            {% else %}
+                <img src="https://placehold.co/700x380?text=SpaceHub" class="img-fluid rounded-4 shadow w-100" alt="لا صورة">
+            {% endif %}
+        {% endwith %}
+
+        {% if user.is_authenticated and space.owner == user %}
+            <a href="{% url 'spaces:add_image' space.pk %}" class="btn btn-outline-secondary btn-sm mt-2">
+                <i class="fas fa-image me-1"></i>إضافة صور
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Info -->
+    <div class="col-lg-5">
+        <div class="d-flex gap-2 mb-2">
+            <span class="badge bg-primary">{{ space.get_space_type_display }}</span>
+            <span class="badge bg-secondary">{{ space.get_city_display }}</span>
+            <span class="badge bg-{% if space.status == 'available' %}success{% else %}danger{% endif %}">
+                {{ space.get_status_display }}
+            </span>
+        </div>
+        <h2 class="fw-bold">{{ space.title }}</h2>
+        <p class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ space.address }}</p>
+
+        <div class="d-flex align-items-center mb-3">
+            <span class="text-warning fs-5 me-2"><i class="fas fa-star"></i></span>
+            <span class="fw-bold">{{ avg_rating|floatformat:1 }}</span>
+            <span class="text-muted ms-2">({{ space.reviews.count }} تقييم)</span>
+        </div>
+
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <div class="card border-0 bg-light text-center p-2">
+                    <small class="text-muted">السعة</small>
+                    <strong>{{ space.capacity }} شخص</strong>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card border-0 bg-light text-center p-2">
+                    <small class="text-muted">المساحة</small>
+                    <strong>{{ space.area_sqm }} م²</strong>
+                </div>
+            </div>
+        </div>
+
+        <p class="fs-4 fw-bold text-success mb-3">{{ space.price_per_day }} ريال <small class="fs-6 text-muted">/يوم</small></p>
+
+        {% if user.is_authenticated %}
+            {% if space.owner == user %}
+                <a href="{% url 'spaces:edit' space.pk %}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="fas fa-edit me-1"></i>تعديل المساحة
+                </a>
+                <a href="{% url 'spaces:delete' space.pk %}" class="btn btn-outline-danger w-100">
+                    <i class="fas fa-trash me-1"></i>حذف المساحة
+                </a>
+            {% elif space.status == 'available' %}
+                <a href="{% url 'bookings:create' space.pk %}" class="btn btn-warning w-100 fw-bold py-2">
+                    <i class="fas fa-calendar-plus me-1"></i>احجز الآن
+                </a>
+            {% else %}
+                <button class="btn btn-secondary w-100" disabled>غير متاحة للحجز حالياً</button>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-warning w-100 fw-bold py-2">
+                سجّل دخولك للحجز
+            </a>
+        {% endif %}
+
+        <p class="text-muted small mt-3">المالك: <strong>{{ space.owner.get_full_name|default:space.owner.username }}</strong></p>
+    </div>
+</div>
+
+<!-- Description -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mt-4">
+    <h5 class="fw-bold mb-2">الوصف</h5>
+    <p>{{ space.description }}</p>
+</div>
+
+<!-- Reviews -->
+<div class="mt-5">
+    <h4 class="fw-bold mb-3"><i class="fas fa-star me-2 text-warning"></i>التقييمات</h4>
+
+    {% if user.is_authenticated and not user_review and space.owner != user %}
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h6 class="fw-bold mb-3">أضف تقييمك</h6>
+            <form method="post" action="{% url 'reviews:add' space.pk %}">
+                {% csrf_token %}
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label small">التقييم (1-5)</label>
+                        <input type="number" name="rating" class="form-control" min="1" max="5" required>
+                    </div>
+                    <div class="col-md-9">
+                        <label class="form-label small">تعليقك</label>
+                        <textarea name="comment" class="form-control" rows="2" required></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-warning btn-sm mt-2 fw-bold">إرسال التقييم</button>
+            </form>
+        </div>
+    {% endif %}
+
+    {% for review in space.reviews.all %}
+        <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>{{ review.user.username }}</strong>
+                    <span class="text-warning ms-2">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                    <small class="text-muted ms-2">{{ review.created_at|date:"Y/m/d" }}</small>
+                </div>
+                {% if user == review.user %}
+                    <form method="post" action="{% url 'reviews:delete' review.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">حذف</button>
+                    </form>
+                {% endif %}
+            </div>
+            <p class="mb-0 mt-2">{{ review.comment }}</p>
+        </div>
+    {% empty %}
+        <p class="text-muted">لا يوجد تقييمات بعد. كن أول من يقيّم!</p>
+    {% endfor %}
+</div>
+{% endblock %}
